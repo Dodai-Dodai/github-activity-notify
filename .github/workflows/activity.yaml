@@ -1,0 +1,23 @@
+name: Fetch GitHub Activity
+
+on:
+  schedule:
+    - cron: '0 * * * *' # 1時間ごとに実行
+  workflow_dispatch: # 手動実行をトリガーに追加
+
+jobs:
+  fetch-activity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Fetch GitHub activity
+        id: fetch_activity
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/users/${{ github.actor }}/events" \
+          > activity.json
+
+      - name: Display activity
+        run: cat activity.json

@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // Define a struct to match the JSON structure
@@ -22,7 +26,12 @@ type ContributionData struct {
 }
 
 func main() {
-	url := "https://github-contributions-api.deno.dev/Dodai-Dodai.json"
+	err := godotenv.Load("url.env")
+	if err != nil {
+		log.Fatal("Errload .env")
+	}
+	url := os.Getenv("URL")
+
 	resp, err := http.Get(url)
 	if err != nil {
 		panic(err)

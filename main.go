@@ -10,8 +10,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/joho/godotenv"
 )
 
 // Define a struct to match the JSON structure
@@ -29,11 +27,17 @@ type ContributionData struct {
 }
 
 func main() {
-	err := godotenv.Load("url.env")
+	/*err := godotenv.Load("url.env")
 	if err != nil {
 		log.Fatal("Errload .env")
 	}
 	url := os.Getenv("URL")
+	*/
+
+	url := os.Getenv("URL")
+	if url == " " {
+		log.Fatal("Errload env:URL")
+	}
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -82,11 +86,16 @@ func main() {
 }
 
 func sendLine(yesterday int, continueDays int) {
-	err := godotenv.Load("line-notify.env")
+	/*err := godotenv.Load("line-notify.env")
 	if err != nil {
 		log.Fatal("Errload .env")
 	}
+	token := os.Getenv("TOKEN")*/
+
 	token := os.Getenv("TOKEN")
+	if token == " " {
+		log.Fatal("Errload env:TOKEN")
+	}
 
 	lineURL := "https://notify-api.line.me/api/notify"
 

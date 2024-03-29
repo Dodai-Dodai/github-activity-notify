@@ -1,7 +1,6 @@
 version: "3"
 services:
   github-activity-notify:
-    build:
-      context: .
-      dockerfile: ./dockerfile
-    env_file: .env
+    image: dodaidodai/github-activity-notify
+    env_file:
+      - .env

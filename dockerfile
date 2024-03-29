@@ -1,22 +1,17 @@
-# ビルドステージ
+# build stage
 FROM golang:latest AS builder
 
 WORKDIR /work
 
-COPY go.mod go.sum ./
+COPY main.go go.mod go.sum ./
 
-RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-COPY . .
+# exec stage
+FROM gcr.io/distroless/static-debian11:latest 
 
-RUN go build -o main main.go && \
-    go clean -modcache
+WORKDIR /root/
 
-# ランタイムステージ
-FROM gcr.io/distroless/static-debian12:latest
-
-WORKDIR /app
-
-COPY --from=builder /work/main /app/
+COPY --from=builder /work/main .
 
 ENTRYPOINT ["./main"]

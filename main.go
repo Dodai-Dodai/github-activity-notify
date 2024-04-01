@@ -6,10 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
-	"strconv"
-	"strings"
 )
 
 // Define a struct to match the JSON structure
@@ -27,12 +24,6 @@ type ContributionData struct {
 }
 
 func main() {
-	/*err := godotenv.Load("url.env")
-	if err != nil {
-		log.Fatal("Errload .env")
-	}
-	url := os.Getenv("URL")
-	*/
 
 	url := os.Getenv("URL")
 	if url == " " {
@@ -64,8 +55,6 @@ func main() {
 		}
 	}
 
-	//fmt.Println(dataSlice)
-
 	fmt.Print("昨日のコントリビューション数:")
 	fmt.Println(dataSlice[len(dataSlice)-2].ContributionCount)
 
@@ -82,43 +71,8 @@ func main() {
 	fmt.Print("昨日までの連続コントリビューション日数:")
 	fmt.Println(continueDays)
 
-	sendLine(dataSlice[len(dataSlice)-2].ContributionCount, continueDays)
-}
+	fmt.Print("今日のコントリビューション数:")
+	fmt.Println(dataSlice[len(dataSlice)-1].ContributionCount)
 
-func sendLine(yesterday int, continueDays int) {
-	/*err := godotenv.Load("line-notify.env")
-	if err != nil {
-		log.Fatal("Errload .env")
-	}
-	token := os.Getenv("TOKEN")*/
-
-	token := os.Getenv("TOKEN")
-	if token == " " {
-		log.Fatal("Errload env:TOKEN")
-	}
-
-	lineURL := "https://notify-api.line.me/api/notify"
-
-	u, err := url.ParseRequestURI(lineURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// 昨日までのコントリビューション数と連続コントリビューション日数を送信
-	text := "昨日のコントリビューション数:" + strconv.Itoa(yesterday) + "\n" + "昨日までの連続コントリビューション日数:" + strconv.Itoa(continueDays)
-	// メッセージを送信
-	message := url.Values{"message": {text}}
-	r, _ := http.NewRequest("POST", u.String(), strings.NewReader(message.Encode()))
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	r.Header.Set("Authorization", "Bearer "+token)
-	resp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(string(body))
+	SendLine(dataSlice[len(dataSlice)-2].ContributionCount, continueDays, dataSlice[len(dataSlice)-1].ContributionCount)
 }

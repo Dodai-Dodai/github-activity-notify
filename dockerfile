@@ -3,7 +3,7 @@ FROM golang:latest AS builder
 
 WORKDIR /work
 
-COPY main.go go.mod go.sum ./
+COPY main.go returnHour.go sendLine.go go.mod go.sum ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 

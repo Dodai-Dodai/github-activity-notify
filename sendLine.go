@@ -29,8 +29,6 @@ func SendLine(yesterday int, continueDays int, today int) {
 
 	var nowHour = ReturnHour()
 
-	nowHour = 7
-
 	if nowHour == 7 || nowHour == 8 {
 		// 昨日までのコントリビューション数と連続コントリビューション日数を送信
 		text = "昨日のコントリビューション数:" + strconv.Itoa(yesterday) + "\n" + "昨日までの連続コントリビューション日数:" + strconv.Itoa(continueDays)

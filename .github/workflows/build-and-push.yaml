@@ -27,7 +27,7 @@ jobs:
         git config user.email "github-actions@github.com"
 
     - name: Check out the exec branch
-      run: git checkout -b exec || git checkout exec
+      run: git checkout --allow-empty -b exec || git checkout exec
 
     - name: Add executable
       run: |

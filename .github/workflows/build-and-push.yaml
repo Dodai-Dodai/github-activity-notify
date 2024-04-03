@@ -30,7 +30,7 @@ jobs:
     - name: Check out the exec branch
       run: |
         git pull origin main
-        git checkout -b exec || git checkout exec
+        git switch exec
 
     - name: Add executable
       run: |

@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 // Define a struct to match the JSON structure
@@ -23,56 +24,103 @@ type ContributionData struct {
 	ContributionCount int
 }
 
-func main() {
+type GithubContribution struct {
+	Data struct {
+		User struct {
+			ContributionsCollection struct {
+				ContributionCalendar struct {
+					Weeks []struct {
+						ContributionDays []struct {
+							Color             string `json:"color"`
+							ContributionCount int    `json:"contributionCount"`
+							Date              string `json:"date"`
+							Weekday           int    `json:"weekday"`
+						} `json:"contributionDays"`
+					} `json:"weeks"`
+				} `json:"contributionCalendar"`
+			} `json:"contributionsCollection"`
+		} `json:"user"`
+	} `json:"data"`
+}
 
-	url := os.Getenv("URL")
-	if url == " " {
-		log.Fatal("Errload env:URL")
-	}
-
-	resp, err := http.Get(url)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	var contributions Contributions
-	json.Unmarshal(body, &contributions)
-
-	var dataSlice []ContributionData
-
-	for _, weeklyContributions := range contributions.Contributions {
-		for _, contribution := range weeklyContributions {
-			dataSlice = append(dataSlice, ContributionData{
-				Date:              contribution.Date,
-				ContributionCount: contribution.ContributionCount,
-			})
+var LINE_TOKEN = os.Getenv("LINE_TOKEN")
+var TOKEN = os.Getenv("GITHUB_TOKEN")
+var USER = os.Getenv("GITHUB_USER")
+var URL = "https://api.github.com/graphql"
+var QUERY = fmt.Sprintf(`
+{
+  user(login: "%s") {
+    contributionsCollection {
+	  contributionCalendar {
+		weeks {
+		  contributionDays {
+			color
+			contributionCount
+			date
+			weekday
 		}
+	  }
+	}
+  }
+  }
+}
+`, USER)
+
+func main() {
+	requestBody, err := json.Marshal(map[string]string{"query": QUERY})
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Print("昨日のコントリビューション数:")
-	fmt.Println(dataSlice[len(dataSlice)-2].ContributionCount)
+	request, err := http.NewRequest("POST", URL, strings.NewReader(string(requestBody)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", TOKEN))
 
-	var continueDays = 0
-	for i := 0; i < len(dataSlice)-1; i++ {
-		//昨日まで何日続いているか
-		if dataSlice[i].ContributionCount == 0 {
-			continueDays = 0
-		} else {
-			continueDays++
+	client := new(http.Client)
+	response, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer response.Body.Close()
+
+	var githubContribution GithubContribution
+	if err := json.NewDecoder(response.Body).Decode(&githubContribution); err != nil {
+		log.Fatal(err)
+	}
+
+	yesterdayContribution := 0
+	todayContribution := 0
+
+	for _, week := range githubContribution.Data.User.ContributionsCollection.ContributionCalendar.Weeks {
+		for _, day := range week.ContributionDays {
+			// 昨日の日付を取得
+			if day.Date == time.Now().AddDate(0, 0, -1).Format("2006-01-02") {
+				fmt.Print("昨日のコントリビューション数:")
+				fmt.Println(day.ContributionCount)
+				yesterdayContribution = day.ContributionCount
+			}
+			if day.Date == time.Now().Format("2006-01-02") {
+				fmt.Print("今日のコントリビューション数:")
+				fmt.Println(day.ContributionCount)
+				todayContribution = day.ContributionCount
+			}
 		}
 	}
 
 	fmt.Print("昨日までの連続コントリビューション日数:")
+	var continueDays = 0
+	for _, week := range githubContribution.Data.User.ContributionsCollection.ContributionCalendar.Weeks {
+		for _, day := range week.ContributionDays {
+			if day.ContributionCount == 0 && day.Date != time.Now().Format("2006-01-02") {
+				continueDays = 0
+			} else if day.Date != time.Now().Format("2006-01-02") {
+				continueDays++
+			}
+		}
+	}
 	fmt.Println(continueDays)
 
-	fmt.Print("今日のコントリビューション数:")
-	fmt.Println(dataSlice[len(dataSlice)-1].ContributionCount)
-
-	SendLine(dataSlice[len(dataSlice)-2].ContributionCount, continueDays, dataSlice[len(dataSlice)-1].ContributionCount)
+	SendLine(yesterdayContribution, continueDays, todayContribution)
 }

@@ -6,15 +6,18 @@ GitHubのコントリビューション数をLine Notifyで知らせます。
 
 ## 使い方
 
-環境変数にコントリビューション数を返すAPIのURLとLINE Notifyのトークンを入れて実行
+LINE notifyのTOKENとGitHubのAccess Tokenを`.env`にセットして使います
 
-```sh
-URL=https://github-contributions-api.deno.dev/[GitHub_User_ID].json \
-TOKEN=[Your Line Notify Token] \
-go run .
+`.env`
+```
+LINE_TOKEN=YOUR_LINE_ACCESS_TOKEN
+GITHUB_TOKEN=YOUR_GITHUB_ACCESS_TOKEN
+GITHUB_USER=YOUE_GITHUB_USERNAME
 ```
 
-こちらのAPIを使っています:https://github.com/kawarimidoll/deno-github-contributions-api
+```sh
+$ go run .
+```
 
 ## Extra
 

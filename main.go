@@ -8,6 +8,17 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
+)
+
+// 環境変数のグローバル変数宣言
+var (
+	LINE_TOKEN   string
+	GITHUB_TOKEN string
+	GITHUB_USER  string
+	URL          = "https://api.github.com/graphql"
+	QUERY        string
 )
 
 // Define a struct to match the JSON structure
@@ -43,30 +54,40 @@ type GithubContribution struct {
 	} `json:"data"`
 }
 
-var LINE_TOKEN = os.Getenv("LINE_TOKEN")
-var TOKEN = os.Getenv("GITHUB_TOKEN")
-var USER = os.Getenv("GITHUB_USER")
-var URL = "https://api.github.com/graphql"
-var QUERY = fmt.Sprintf(`
-{
-  user(login: "%s") {
-    contributionsCollection {
-	  contributionCalendar {
-		weeks {
-		  contributionDays {
-			color
-			contributionCount
-			date
-			weekday
-		}
-	  }
+func init() {
+	// .envファイルの読み込み
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
-  }
-  }
+
+	// 環境変数の取得
+	LINE_TOKEN = os.Getenv("LINE_TOKEN")
+	GITHUB_TOKEN = os.Getenv("GITHUB_TOKEN")
+	GITHUB_USER = os.Getenv("GITHUB_USER")
+
+	// GraphQLのクエリ
+	QUERY = fmt.Sprintf(`
+    {
+        user(login: "%s") {
+            contributionsCollection {
+                contributionCalendar {
+                    weeks {
+                        contributionDays {
+                            color
+                            contributionCount
+                            date
+                            weekday
+                        }
+                    }
+                }
+            }
+        }
+    }`, GITHUB_USER)
 }
-`, USER)
 
 func main() {
+
 	requestBody, err := json.Marshal(map[string]string{"query": QUERY})
 	if err != nil {
 		log.Fatal(err)
@@ -76,7 +97,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", TOKEN))
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", GITHUB_TOKEN))
 
 	client := new(http.Client)
 	response, err := client.Do(request)

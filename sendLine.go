@@ -13,7 +13,7 @@ import (
 
 func SendLine(yesterday int, continueDays int, today int) {
 
-	token := os.Getenv("TOKEN")
+	token := os.Getenv("LINE_TOKEN")
 	if token == " " {
 		log.Fatal("Errload env:TOKEN")
 	}
